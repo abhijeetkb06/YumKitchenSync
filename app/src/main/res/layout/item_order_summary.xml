@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingVertical="@dimen/spacing_sm"
+    android:paddingHorizontal="@dimen/spacing_xs">
+
+    <TextView
+        android:id="@+id/text_table"
+        android:layout_width="64dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/on_surface"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/text_status_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+        android:gravity="center"
+        android:paddingHorizontal="@dimen/spacing_sm"
+        android:textAllCaps="true"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/text_items"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="end"
+        android:layout_marginEnd="@dimen/spacing_sm"
+        android:textColor="@color/on_surface_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/text_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/on_surface_secondary"
+        android:textSize="12sp" />
+</LinearLayout>

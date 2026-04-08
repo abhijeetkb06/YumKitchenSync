@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="@dimen/spacing_lg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_xl"
+        android:text="@string/app_name"
+        android:textColor="@color/yum_red"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:layout_marginBottom="@dimen/spacing_xl"
+        android:text="@string/role_selection_subtitle"
+        android:textColor="@color/on_surface_secondary"
+        android:textSize="16sp" />
+
+    <!-- Waiter Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_waiter"
+        style="@style/RoleCardStyle"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/role_card_height"
+        android:layout_marginBottom="@dimen/spacing_md"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="@dimen/card_corner_radius">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_role_waiter"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83C\uDF7D"
+                android:textSize="@dimen/role_icon_size" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/role_waiter"
+                android:textColor="@color/white"
+                android:textSize="@dimen/role_title_size"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:text="@string/role_waiter_desc"
+                android:textColor="#CCFFFFFF"
+                android:textSize="@dimen/role_desc_size" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Kitchen Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_kitchen"
+        style="@style/RoleCardStyle"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/role_card_height"
+        android:layout_marginBottom="@dimen/spacing_md"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="@dimen/card_corner_radius">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_role_kitchen"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDC68\u200D\uD83C\uDF73"
+                android:textSize="@dimen/role_icon_size" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/role_kitchen"
+                android:textColor="@color/white"
+                android:textSize="@dimen/role_title_size"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:text="@string/role_kitchen_desc"
+                android:textColor="#CCFFFFFF"
+                android:textSize="@dimen/role_desc_size" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Manager Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_manager"
+        style="@style/RoleCardStyle"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/role_card_height"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="@dimen/card_corner_radius">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_role_manager"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCCA"
+                android:textSize="@dimen/role_icon_size" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/role_manager"
+                android:textColor="@color/white"
+                android:textSize="@dimen/role_title_size"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:text="@string/role_manager_desc"
+                android:textColor="#CCFFFFFF"
+                android:textSize="@dimen/role_desc_size" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

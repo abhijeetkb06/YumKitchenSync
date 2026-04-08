@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Yum Kitchen Sync</string>
+
+    <!-- Role Selection -->
+    <string name="role_selection_title">Choose Your Role</string>
+    <string name="role_selection_subtitle">Select how this device will be used</string>
+    <string name="role_waiter">Waiter</string>
+    <string name="role_waiter_desc">Take orders from tables</string>
+    <string name="role_kitchen">Kitchen</string>
+    <string name="role_kitchen_desc">Receive and prepare orders</string>
+    <string name="role_manager">Manager</string>
+    <string name="role_manager_desc">Monitor all operations</string>
+
+    <!-- Waiter -->
+    <string name="menu_title">Menu</string>
+    <string name="category_all">All</string>
+    <string name="category_mains">Mains</string>
+    <string name="category_sides">Sides</string>
+    <string name="category_drinks">Drinks</string>
+    <string name="category_desserts">Desserts</string>
+    <string name="cart_title">Your Cart</string>
+    <string name="cart_empty">Cart is empty</string>
+    <string name="send_to_kitchen">Send to Kitchen</string>
+    <string name="table_number_hint">Table #</string>
+    <string name="order_sent">Order sent to kitchen!</string>
+    <string name="confirm_order">Confirm Order</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Kitchen -->
+    <string name="kitchen_title">Kitchen Display</string>
+    <string name="no_orders">No active orders</string>
+    <string name="start_preparing">Start Preparing</string>
+    <string name="mark_ready">Mark Ready</string>
+    <string name="mark_served">Served</string>
+    <string name="order_items_format">%d items</string>
+
+    <!-- Manager -->
+    <string name="manager_title">Dashboard</string>
+    <string name="network_status">Network Status</string>
+    <string name="order_overview">Order Overview</string>
+    <string name="recent_orders">Recent Orders</string>
+    <string name="code_spotlight">Code Spotlight</string>
+    <string name="peers_connected">%d peers connected</string>
+    <string name="no_peers">Searching for peers\u2026</string>
+    <string name="replicator_active">P2P Sync Active</string>
+    <string name="replicator_inactive">P2P Sync Inactive</string>
+
+    <!-- Peer Discovery -->
+    <string name="peer_discovery_title">Peer Network</string>
+    <string name="this_device">This Device</string>
+    <string name="searching">Searching for peers\u2026</string>
+
+    <!-- Permissions -->
+    <string name="permissions_title">Permissions Needed</string>
+    <string name="permissions_message">This app requires WiFi and location permissions to discover nearby devices for peer-to-peer sync.</string>
+    <string name="grant_permissions">Grant Permissions</string>
+
+    <!-- General -->
+    <string name="reset_demo">Reset Demo</string>
+    <string name="table_format">Table %d</string>
+
+    <!-- Code Snippet -->
+    <string name="code_snippet_text">MultipeerReplicatorConfiguration config =\n  new MultipeerReplicatorConfiguration.Builder()\n    .setPeerGroupID(\"com.yumkitchen.sync\")\n    .setIdentity(identity)\n    .setAuthenticator(authenticator)\n    .setCollections(collections)\n    .build();\n\nreplicator = new MultipeerReplicator(config);\nreplicator.start();\n// That\'s it! Auto-discovery begins immediately.</string>
+</resources>

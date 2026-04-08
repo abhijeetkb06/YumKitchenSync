@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="card_elevation">4dp</dimen>
+
+    <dimen name="role_card_height">160dp</dimen>
+    <dimen name="role_icon_size">56dp</dimen>
+    <dimen name="role_title_size">22sp</dimen>
+    <dimen name="role_desc_size">14sp</dimen>
+
+    <dimen name="menu_item_emoji_size">40sp</dimen>
+    <dimen name="menu_item_name_size">15sp</dimen>
+    <dimen name="menu_item_price_size">14sp</dimen>
+
+    <dimen name="order_table_number_size">28sp</dimen>
+    <dimen name="order_card_min_height">180dp</dimen>
+
+    <dimen name="peer_bubble_size">64dp</dimen>
+    <dimen name="peer_center_size">80dp</dimen>
+    <dimen name="peer_mesh_height">280dp</dimen>
+
+    <dimen name="bottom_sheet_peek">56dp</dimen>
+</resources>
