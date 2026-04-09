@@ -22,7 +22,10 @@ import com.yumkitchen.sync.data.model.Order;
 import com.yumkitchen.sync.data.repository.OrderRepository;
 import com.yumkitchen.sync.util.Constants;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class KitchenDisplayFragment extends Fragment implements OrderCardAdapter.OnOrderActionListener {
     private static final String TAG = "KitchenDisplay";
@@ -76,7 +79,7 @@ public class KitchenDisplayFragment extends Fragment implements OrderCardAdapter
             queryToken = liveQuery.addChangeListener(change -> {
                 if (!isAdded()) return;
                 requireActivity().runOnUiThread(() -> {
-                    List<Order> orders = orderRepo.getActiveOrders();
+                    List<Order> orders = mergeOrdersByTable(orderRepo.getActiveOrders());
                     adapter.setOrders(orders);
 
                     // Haptic feedback for new orders
@@ -91,7 +94,7 @@ public class KitchenDisplayFragment extends Fragment implements OrderCardAdapter
             });
 
             // Initial load
-            List<Order> orders = orderRepo.getActiveOrders();
+            List<Order> orders = mergeOrdersByTable(orderRepo.getActiveOrders());
             adapter.setOrders(orders);
             lastOrderCount = orders.size();
             emptyState.setVisibility(orders.isEmpty() ? View.VISIBLE : View.GONE);
@@ -114,21 +117,49 @@ public class KitchenDisplayFragment extends Fragment implements OrderCardAdapter
         }
     }
 
+    /**
+     * Groups orders by table number into a single merged Order per table.
+     * Combines all items and tracks all underlying order IDs for status updates.
+     */
+    private List<Order> mergeOrdersByTable(List<Order> rawOrders) {
+        LinkedHashMap<Integer, Order> tableMap = new LinkedHashMap<>();
+        for (Order order : rawOrders) {
+            int table = order.getTableNumber();
+            Order existing = tableMap.get(table);
+            if (existing == null) {
+                order.addMergedOrderId(order.getOrderId());
+                tableMap.put(table, order);
+            } else {
+                existing.addItems(order.getItems());
+                existing.addMergedOrderId(order.getOrderId());
+            }
+        }
+        return new ArrayList<>(tableMap.values());
+    }
+
     // OrderCardAdapter.OnOrderActionListener
     @Override
     public void onStatusChange(Order order, String newStatus) {
         try {
-            orderRepo.updateOrderStatus(order.getOrderId(), newStatus);
+            // Update all underlying order documents for this merged table card
+            List<String> ids = order.getMergedOrderIds();
+            if (ids != null && !ids.isEmpty()) {
+                for (String id : ids) {
+                    orderRepo.updateOrderStatus(id, newStatus);
+                }
+            } else {
+                orderRepo.updateOrderStatus(order.getOrderId(), newStatus);
+            }
             String msg = "";
             switch (newStatus) {
                 case Constants.ORDER_STATUS_PREPARING:
-                    msg = order.getShortId() + " being prepared";
+                    msg = "Table " + order.getTableNumber() + " being prepared";
                     break;
                 case Constants.ORDER_STATUS_READY:
-                    msg = order.getShortId() + " is READY!";
+                    msg = "Table " + order.getTableNumber() + " is READY!";
                     break;
                 case Constants.ORDER_STATUS_SERVED:
-                    msg = order.getShortId() + " served";
+                    msg = "Table " + order.getTableNumber() + " served";
                     break;
             }
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();

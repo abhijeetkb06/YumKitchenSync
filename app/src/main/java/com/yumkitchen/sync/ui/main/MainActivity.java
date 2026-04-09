@@ -26,7 +26,10 @@ public class MainActivity extends AppCompatActivity implements PeerEventBus.Peer
 
     private DeviceRole currentRole;
     private MaterialToolbar toolbar;
-    private Fragment roleFragment;
+    private BottomNavigationView bottomNav;
+    private WaiterMenuFragment waiterFragment;
+    private KitchenDisplayFragment kitchenFragment;
+    private ManagerDashboardFragment managerFragment;
     private PeerDiscoveryFragment peerFragment;
     private int peerCount = 0;
 
@@ -40,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements PeerEventBus.Peer
 
         setupToolbar();
         setupBottomNav();
-        showRoleFragment();
 
         PeerEventBus.getInstance().register(this);
     }
@@ -75,46 +77,63 @@ public class MainActivity extends AppCompatActivity implements PeerEventBus.Peer
     }
 
     private void setupBottomNav() {
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+        bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
-            if (id == R.id.nav_orders) {
-                showRoleFragment();
+            if (id == R.id.nav_waiter) {
+                showFragment(getWaiterFragment());
+                return true;
+            } else if (id == R.id.nav_kitchen) {
+                showFragment(getKitchenFragment());
+                return true;
+            } else if (id == R.id.nav_manager) {
+                showFragment(getManagerFragment());
                 return true;
             } else if (id == R.id.nav_peers) {
-                showPeerFragment();
+                showFragment(getPeerFragment());
                 return true;
             }
             return false;
         });
+
+        // Select the tab matching the initial role
+        switch (currentRole) {
+            case WAITER:
+                bottomNav.setSelectedItemId(R.id.nav_waiter);
+                break;
+            case KITCHEN:
+                bottomNav.setSelectedItemId(R.id.nav_kitchen);
+                break;
+            case MANAGER:
+                bottomNav.setSelectedItemId(R.id.nav_manager);
+                break;
+        }
     }
 
-    private void showRoleFragment() {
-        if (roleFragment == null) {
-            switch (currentRole) {
-                case WAITER:
-                    roleFragment = new WaiterMenuFragment();
-                    break;
-                case KITCHEN:
-                    roleFragment = new KitchenDisplayFragment();
-                    break;
-                case MANAGER:
-                    roleFragment = new ManagerDashboardFragment();
-                    break;
-            }
-        }
+    private void showFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, roleFragment)
+                .replace(R.id.fragment_container, fragment)
                 .commit();
     }
 
-    private void showPeerFragment() {
-        if (peerFragment == null) {
-            peerFragment = new PeerDiscoveryFragment();
-        }
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, peerFragment)
-                .commit();
+    private WaiterMenuFragment getWaiterFragment() {
+        if (waiterFragment == null) waiterFragment = new WaiterMenuFragment();
+        return waiterFragment;
+    }
+
+    private KitchenDisplayFragment getKitchenFragment() {
+        if (kitchenFragment == null) kitchenFragment = new KitchenDisplayFragment();
+        return kitchenFragment;
+    }
+
+    private ManagerDashboardFragment getManagerFragment() {
+        if (managerFragment == null) managerFragment = new ManagerDashboardFragment();
+        return managerFragment;
+    }
+
+    private PeerDiscoveryFragment getPeerFragment() {
+        if (peerFragment == null) peerFragment = new PeerDiscoveryFragment();
+        return peerFragment;
     }
 
     private void updateSubtitle() {

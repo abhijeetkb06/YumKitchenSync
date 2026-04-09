@@ -99,7 +99,13 @@ public class OrderCardAdapter extends RecyclerView.Adapter<OrderCardAdapter.View
 
         void bind(Order order) {
             textTable.setText("Table " + order.getTableNumber());
-            textOrderId.setText(order.getShortId());
+            // Show count of merged orders if more than one
+            List<String> mergedIds = order.getMergedOrderIds();
+            if (mergedIds != null && mergedIds.size() > 1) {
+                textOrderId.setText(mergedIds.size() + " orders");
+            } else {
+                textOrderId.setText(order.getShortId());
+            }
             textElapsed.setText(TimeUtils.getElapsedMinutes(order.getCreatedAt()));
 
             // Set header color based on status
@@ -120,14 +126,31 @@ public class OrderCardAdapter extends RecyclerView.Adapter<OrderCardAdapter.View
             // Populate items
             itemsContainer.removeAllViews();
             for (OrderItem item : order.getItems()) {
+                LinearLayout row = new LinearLayout(itemView.getContext());
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                row.setPadding(0, 4, 0, 4);
+
+                // Emoji
+                String emoji = item.getEmoji();
+                if (emoji != null && !emoji.isEmpty()) {
+                    TextView emojiTv = new TextView(itemView.getContext());
+                    emojiTv.setText(emoji);
+                    emojiTv.setTextSize(20);
+                    emojiTv.setPadding(0, 0, 12, 0);
+                    row.addView(emojiTv);
+                }
+
+                // Item text
                 TextView tv = new TextView(itemView.getContext());
                 tv.setText(item.getQuantity() + "x  " + item.getName()
                         + (item.getNotes() != null && !item.getNotes().isEmpty()
                         ? "  (" + item.getNotes() + ")" : ""));
                 tv.setTextSize(14);
                 tv.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.on_surface));
-                tv.setPadding(0, 4, 0, 4);
-                itemsContainer.addView(tv);
+
+                row.addView(tv);
+                itemsContainer.addView(row);
             }
 
             // Action button

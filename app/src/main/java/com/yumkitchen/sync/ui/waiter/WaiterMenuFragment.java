@@ -103,7 +103,7 @@ public class WaiterMenuFragment extends Fragment implements MenuItemAdapter.OnIt
     @Override
     public void onAddToCart(MenuItem item) {
         OrderItem orderItem = new OrderItem(
-                item.getMenuItemId(), item.getName(), 1, "", item.getPrice());
+                item.getMenuItemId(), item.getName(), 1, "", item.getPrice(), item.getEmoji());
         cartAdapter.addItem(orderItem);
         updateCartVisibility();
     }

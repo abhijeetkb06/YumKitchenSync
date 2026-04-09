@@ -9,6 +9,8 @@ import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.ListenerToken;
+import com.couchbase.lite.LogDomain;
+import com.couchbase.lite.LogLevel;
 import com.couchbase.lite.MutableDocument;
 import com.couchbase.lite.MultipeerCertificateAuthenticator;
 import com.couchbase.lite.MultipeerCollectionConfiguration;
@@ -17,18 +19,20 @@ import com.couchbase.lite.MultipeerReplicatorConfiguration;
 import com.couchbase.lite.PeerInfo;
 import com.couchbase.lite.TLSIdentity;
 import com.couchbase.lite.KeyUsage;
+import com.couchbase.lite.logging.ConsoleLogSink;
+import com.couchbase.lite.logging.LogSinks;
 
 import com.yumkitchen.sync.data.model.DeviceRole;
 import com.yumkitchen.sync.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class CouchbaseManager {
     private static final String TAG = "CouchbaseManager";
@@ -57,6 +61,10 @@ public class CouchbaseManager {
 
     public void openDatabase() throws CouchbaseLiteException {
         if (database != null) return;
+
+        // Enable verbose CBL logging for P2P debugging
+        LogSinks.get().setConsole(new ConsoleLogSink(
+                LogLevel.VERBOSE, LogDomain.REPLICATOR, LogDomain.NETWORK));
 
         DatabaseConfiguration config = new DatabaseConfiguration();
         database = new Database(Constants.DATABASE_NAME, config);
@@ -161,30 +169,26 @@ public class CouchbaseManager {
     // --- Private helpers ---
 
     private TLSIdentity getOrCreateIdentity() throws CouchbaseLiteException {
-        TLSIdentity identity = TLSIdentity.getIdentity(Constants.IDENTITY_LABEL);
+        // Delete any existing identity to ensure a fresh, unique one per app launch
+        // This avoids Bonjour name conflicts when multiple emulators share the same Build.MODEL
+        TLSIdentity.deleteIdentity(Constants.IDENTITY_LABEL);
 
-        if (identity != null && identity.getExpiration().before(new Date())) {
-            TLSIdentity.deleteIdentity(Constants.IDENTITY_LABEL);
-            identity = null;
-        }
+        Map<String, String> attrs = new HashMap<>();
+        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+        attrs.put(TLSIdentity.CERT_ATTRIBUTE_COMMON_NAME,
+                "YumKitchen-" + Build.MODEL + "-" + uniqueSuffix);
+        attrs.put(TLSIdentity.CERT_ATTRIBUTE_ORGANIZATION, "Yum Restaurant");
 
-        if (identity == null) {
-            Map<String, String> attrs = new HashMap<>();
-            attrs.put(TLSIdentity.CERT_ATTRIBUTE_COMMON_NAME, "YumKitchen-" + Build.MODEL);
-            attrs.put(TLSIdentity.CERT_ATTRIBUTE_ORGANIZATION, "Yum Restaurant");
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.YEAR, 1);
 
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.YEAR, 1);
+        Set<KeyUsage> keyUsages = new HashSet<>();
+        keyUsages.add(KeyUsage.CLIENT_AUTH);
+        keyUsages.add(KeyUsage.SERVER_AUTH);
 
-            Set<KeyUsage> keyUsages = new HashSet<>();
-            keyUsages.add(KeyUsage.CLIENT_AUTH);
-            keyUsages.add(KeyUsage.SERVER_AUTH);
-
-            identity = TLSIdentity.createIdentity(
-                    keyUsages, attrs, cal.getTime(), Constants.IDENTITY_LABEL);
-            Log.i(TAG, "Created new TLS identity");
-        }
-
+        TLSIdentity identity = TLSIdentity.createIdentity(
+                keyUsages, attrs, cal.getTime(), Constants.IDENTITY_LABEL);
+        Log.i(TAG, "Created TLS identity: YumKitchen-" + Build.MODEL + "-" + uniqueSuffix);
         return identity;
     }
 
@@ -217,7 +221,8 @@ public class CouchbaseManager {
             String activity = status.getStatus().getActivityLevel().name().toLowerCase();
             String error = status.getStatus().getError() != null
                     ? status.getStatus().getError().getMessage() : null;
-            Log.d(TAG, "Peer repl status: " + peerId + " " + activity);
+            Log.i(TAG, "Peer repl status: " + peerId + " " + activity +
+                    (error != null ? " error: " + error : ""));
             bus.firePeerReplicatorStatus(peerId, outgoing, activity, error);
         });
         listenerTokens.add(peerReplToken);
@@ -227,7 +232,7 @@ public class CouchbaseManager {
             String peerId = status.getPeer().toString();
             boolean push = status.isPush();
             int count = status.getDocuments().size();
-            Log.d(TAG, "Doc sync: " + peerId + " " + (push ? "push" : "pull") + " " + count);
+            Log.i(TAG, "Doc sync: " + peerId + " " + (push ? "push" : "pull") + " " + count + " docs");
             bus.fireDocumentSynced(peerId, push, count);
         });
         listenerTokens.add(docToken);

@@ -20,9 +20,11 @@ public class Order {
     private String createdByName;
     private String createdAt;
     private String updatedAt;
+    private List<String> mergedOrderIds;
 
     public Order() {
         this.items = new ArrayList<>();
+        this.mergedOrderIds = new ArrayList<>();
     }
 
     public static Order create(int tableNumber, List<OrderItem> items,
@@ -68,6 +70,7 @@ public class Order {
                     map.put("quantity", dict.getInt("quantity"));
                     map.put("notes", dict.getString("notes"));
                     map.put("price", dict.getDouble("price"));
+                    map.put("emoji", dict.getString("emoji"));
                     order.items.add(OrderItem.fromMap(map));
                 }
             }
@@ -120,5 +123,21 @@ public class Order {
             return "#" + orderId.substring(orderId.indexOf("::") + 2).toUpperCase();
         }
         return orderId;
+    }
+
+    public List<String> getMergedOrderIds() {
+        return mergedOrderIds;
+    }
+
+    public void addMergedOrderId(String id) {
+        if (mergedOrderIds == null) mergedOrderIds = new ArrayList<>();
+        mergedOrderIds.add(id);
+    }
+
+    public void addItems(List<OrderItem> newItems) {
+        this.items.addAll(newItems);
+        for (OrderItem item : newItems) {
+            this.totalAmount += item.getLineTotal();
+        }
     }
 }
