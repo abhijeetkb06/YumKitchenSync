@@ -13,7 +13,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/yum_red"
+            android:background="@color/ks_red"
             app:title="@string/app_name"
             app:titleTextColor="@color/white"
             app:subtitleTextColor="#CCFFFFFF" />
@@ -31,8 +31,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/surface"
-        app:itemIconTint="@color/yum_red"
-        app:itemTextColor="@color/yum_red"
+        app:itemIconTint="@color/ks_red"
+        app:itemTextColor="@color/ks_red"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav_menu" />
 

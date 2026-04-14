@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="yum_red">#D32F2F</color>
-    <color name="yum_red_dark">#B71C1C</color>
-    <color name="yum_amber">#FF6F00</color>
-    <color name="yum_amber_light">#FFA726</color>
+    <color name="ks_red">#D32F2F</color>
+    <color name="ks_red_dark">#B71C1C</color>
+    <color name="ks_amber">#FF6F00</color>
+    <color name="ks_amber_light">#FFA726</color>
     <color name="success_green">#2E7D32</color>
     <color name="success_green_light">#66BB6A</color>
     <color name="syncing_blue">#1565C0</color>

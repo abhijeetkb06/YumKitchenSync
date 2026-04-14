@@ -108,7 +108,7 @@
                     android:layout_width="120dp"
                     android:layout_height="wrap_content"
                     android:hint="@string/customer_name_hint"
-                    app:boxStrokeColor="@color/yum_red">
+                    app:boxStrokeColor="@color/ks_red">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/edit_customer_name"
@@ -134,7 +134,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/send_to_kitchen"
-                    android:backgroundTint="@color/yum_red" />
+                    android:backgroundTint="@color/ks_red" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

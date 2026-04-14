@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "YumKitchenSync"
+rootProject.name = "KitchenSync"
 include ':app'

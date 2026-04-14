@@ -13,20 +13,20 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
-        android:name=".YumKitchenApp"
+        android:name=".KitchenSyncApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.YumKitchenSync"
+        android:theme="@style/Theme.KitchenSync"
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
 
         <activity
             android:name=".ui.roleselection.RoleSelectionActivity"
             android:exported="true"
-            android:theme="@style/Theme.YumKitchenSync.NoActionBar">
+            android:theme="@style/Theme.KitchenSync.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -35,7 +35,7 @@
 
         <activity
             android:name=".ui.main.MainActivity"
-            android:theme="@style/Theme.YumKitchenSync.NoActionBar" />
+            android:theme="@style/Theme.KitchenSync.NoActionBar" />
 
     </application>
 

@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.yumkitchen.sync'
+    namespace 'com.kitchensync'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.yumkitchen.sync"
+        applicationId "com.kitchensync"
         minSdk 29
         targetSdk 34
         versionCode 1

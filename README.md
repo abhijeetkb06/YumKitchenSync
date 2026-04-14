@@ -73,8 +73,8 @@ Customer at Kiosk          Kitchen Make Line         Order Status Board        S
 ### 1. Clone and Build
 
 ```bash
-git clone https://github.com/abhijeetkb06/YumKitchenSync.git
-cd YumKitchenSync
+git clone https://github.com/abhijeetkb06/KitchenSync.git
+cd KitchenSync
 ```
 
 Verify JDK 17 is configured. Check `gradle.properties` and update the path if needed:
@@ -164,7 +164,7 @@ adb -s emulator-5558 install -r app/build/outputs/apk/debug/app-debug.apk
 
 ```bash
 for emu in emulator-5554 emulator-5556 emulator-5558; do
-  adb -s $emu shell am start -n com.yumkitchen.sync/.ui.roleselection.RoleSelectionActivity
+  adb -s $emu shell am start -n com.kitchensync/.ui.roleselection.RoleSelectionActivity
 done
 ```
 
@@ -232,7 +232,7 @@ done
 ## Architecture
 
 ```
-com.yumkitchen.sync/
+com.kitchensync/
 +-- data/
 |   +-- model/          # Order, OrderItem, MenuItem, DeviceRole
 |   +-- repository/     # OrderRepository, MenuRepository (LiveQuery)
@@ -247,7 +247,7 @@ com.yumkitchen.sync/
 |   +-- discovery/      # PeerDiscoveryFragment, PeerMeshView, PeerListAdapter
 |   +-- manager/        # ManagerDashboardFragment, OrderSummaryAdapter
 +-- util/               # Constants, PermissionHelper, TimeUtils
-+-- YumKitchenApp.java  # Application class
++-- KitchenSyncApp.java  # Application class
 ```
 
 ### Key P2P Components
@@ -261,7 +261,7 @@ com.yumkitchen.sync/
 ```java
 // The MultipeerReplicator setup -- this is all it takes
 MultipeerReplicatorConfiguration config = new MultipeerReplicatorConfiguration.Builder()
-    .setPeerGroupID("com.yumkitchen.sync")
+    .setPeerGroupID("com.kitchensync")
     .setIdentity(identity)
     .setAuthenticator(new MultipeerCertificateAuthenticator((peer, certs) -> true))
     .setCollections(collections)
@@ -306,12 +306,12 @@ replicator.start();  // That's it -- devices auto-discover and sync
 ```bash
 # Clear app data on all emulators (fresh start)
 for emu in emulator-5554 emulator-5556 emulator-5558; do
-  adb -s $emu shell pm clear com.yumkitchen.sync
+  adb -s $emu shell pm clear com.kitchensync
 done
 
 # Relaunch app on all emulators
 for emu in emulator-5554 emulator-5556 emulator-5558; do
-  adb -s $emu shell am start -n com.yumkitchen.sync/.ui.roleselection.RoleSelectionActivity
+  adb -s $emu shell am start -n com.kitchensync/.ui.roleselection.RoleSelectionActivity
 done
 
 # Kill all emulators

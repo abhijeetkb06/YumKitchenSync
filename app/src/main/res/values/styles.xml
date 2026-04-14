@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.YumKitchenSync" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <item name="colorPrimary">@color/yum_red</item>
-        <item name="colorPrimaryDark">@color/yum_red_dark</item>
-        <item name="colorAccent">@color/yum_amber</item>
-        <item name="colorSecondary">@color/yum_amber</item>
+    <style name="Theme.KitchenSync" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <item name="colorPrimary">@color/ks_red</item>
+        <item name="colorPrimaryDark">@color/ks_red_dark</item>
+        <item name="colorAccent">@color/ks_amber</item>
+        <item name="colorSecondary">@color/ks_amber</item>
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor">@color/yum_red_dark</item>
+        <item name="android:statusBarColor">@color/ks_red_dark</item>
     </style>
 
-    <style name="Theme.YumKitchenSync.NoActionBar" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimary">@color/yum_red</item>
-        <item name="colorPrimaryDark">@color/yum_red_dark</item>
-        <item name="colorAccent">@color/yum_amber</item>
-        <item name="colorSecondary">@color/yum_amber</item>
+    <style name="Theme.KitchenSync.NoActionBar" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/ks_red</item>
+        <item name="colorPrimaryDark">@color/ks_red_dark</item>
+        <item name="colorAccent">@color/ks_amber</item>
+        <item name="colorSecondary">@color/ks_amber</item>
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor">@color/yum_red_dark</item>
+        <item name="android:statusBarColor">@color/ks_red_dark</item>
     </style>
 
     <style name="RoleCardStyle" parent="Widget.MaterialComponents.CardView">

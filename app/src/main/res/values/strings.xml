@@ -61,5 +61,5 @@
     <string name="order_number_format">Order #%d</string>
 
     <!-- Code Snippet -->
-    <string name="code_snippet_text">MultipeerReplicatorConfiguration config =\n  new MultipeerReplicatorConfiguration.Builder()\n    .setPeerGroupID(\"com.yumkitchen.sync\")\n    .setIdentity(identity)\n    .setAuthenticator(authenticator)\n    .setCollections(collections)\n    .build();\n\nreplicator = new MultipeerReplicator(config);\nreplicator.start();\n// That\'s it! Auto-discovery begins immediately.</string>
+    <string name="code_snippet_text">MultipeerReplicatorConfiguration config =\n  new MultipeerReplicatorConfiguration.Builder()\n    .setPeerGroupID(\"com.kitchensync\")\n    .setIdentity(identity)\n    .setAuthenticator(authenticator)\n    .setCollections(collections)\n    .build();\n\nreplicator = new MultipeerReplicator(config);\nreplicator.start();\n// That\'s it! Auto-discovery begins immediately.</string>
 </resources>

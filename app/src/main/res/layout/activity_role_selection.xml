@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_xl"
         android:text="@string/app_name"
-        android:textColor="@color/yum_red"
+        android:textColor="@color/ks_red"
         android:textSize="28sp"
         android:textStyle="bold" />
 
