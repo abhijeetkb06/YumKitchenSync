@@ -170,7 +170,7 @@ public class CouchbaseManager {
 
     private TLSIdentity getOrCreateIdentity() throws CouchbaseLiteException {
         // Delete any existing identity to ensure a fresh, unique one per app launch
-        // This avoids Bonjour name conflicts when multiple emulators share the same Build.MODEL
+        // This avoids DNS-SD name conflicts when multiple emulators share the same Build.MODEL
         TLSIdentity.deleteIdentity(Constants.IDENTITY_LABEL);
 
         Map<String, String> attrs = new HashMap<>();

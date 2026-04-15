@@ -18,7 +18,7 @@ Built to demonstrate how Couchbase Lite's P2P auto-discovery eliminates the need
 
 ## What This Demonstrates
 
-- **Automatic Device Discovery** -- Devices find each other via DNS-SD (Bonjour) with zero configuration
+- **Automatic Device Discovery** -- Devices find each other via DNS-SD (Android NSD) with zero configuration
 - **Real-Time P2P Sync** -- Orders sync instantly across all connected devices using MultipeerReplicator
 - **Mesh Network** -- Every device syncs with every other device, no single point of failure
 - **TLS Security** -- All peer communication is encrypted with self-signed certificates
@@ -27,12 +27,105 @@ Built to demonstrate how Couchbase Lite's P2P auto-discovery eliminates the need
 
 ---
 
+## Why MultipeerReplicator? (New API vs Old Approach)
+
+This app uses Couchbase Lite 4.0's **MultipeerReplicator** API, which replaces the older **URLEndpointListener + Replicator** pattern for P2P sync. The difference in developer effort is significant.
+
+### Old Approach: URLEndpointListener + Replicator
+
+With the previous WebSocket-based P2P API, developers had to build and manage every layer of the P2P stack manually:
+
+```
+Developer is responsible for:
+
+1. Service Discovery    Write Android NSD (NsdManager) code to register and browse
+                        for services on the local network
+2. IP + Port Tracking   Resolve discovered services to get IP addresses and ports,
+                        maintain a list of known peers
+3. URL Construction     Build WebSocket URLs: wss://<ip>:<port>/<database>
+4. Listener Setup       Configure and start a URLEndpointListener on one device
+                        (the "server") to accept incoming connections
+5. Replicator Setup     On every other device (the "clients"), create a Replicator
+                        pointed at the listener's URL
+6. Topology Design      Choose and implement a topology -- star, ring, mesh --
+                        and manually manage which device connects to which
+7. TLS Certificate      Generate certs, distribute them to peers, configure trust
+    Exchange            validation on both listener and replicator sides
+8. Reconnect Logic      Handle disconnections with exponential backoff, detect
+                        dead peers, re-resolve addresses on IP changes
+9. Connection Tracking  Track active connections, avoid duplicates, clean up
+                        stale connections when devices leave
+```
+
+**Result:** ~100+ lines of P2P plumbing code, a rigid **star topology** (one listener, many clients), and a **single point of failure** -- if the listener device goes down, all sync stops.
+
+### New Approach: MultipeerReplicator (What This App Uses)
+
+With MultipeerReplicator, the entire P2P stack collapses into a single API call:
+
+```java
+// The ENTIRE P2P setup -- discovery, mesh, TLS, reconnect -- all handled automatically
+MultipeerReplicatorConfiguration config = new MultipeerReplicatorConfiguration.Builder()
+    .setPeerGroupID("com.kitchensync")       // Shared group name (like a WiFi SSID)
+    .setIdentity(identity)                    // TLS cert (self-signed is fine)
+    .setAuthenticator(authenticator)          // Trust validation callback
+    .setCollections(collections)              // Which data to sync
+    .build();
+
+MultipeerReplicator replicator = new MultipeerReplicator(config);
+replicator.start();  // Done. Devices auto-discover and form a mesh.
+```
+
+**Result:** ~30 lines of code, a **self-organizing mesh** topology, and **zero single points of failure**.
+
+### What Gets Eliminated
+
+| Responsibility | Old (URLEndpointListener) | New (MultipeerReplicator) |
+|---|---|---|
+| **Device Discovery** | Write NSD browse/register code manually | Automatic via DNS-SD (Android NSD) |
+| **IP/Port Management** | Resolve, track, and update peer addresses | Handled internally |
+| **URL Construction** | Build `wss://ip:port/db` per peer | No URLs -- peer group ID only |
+| **Topology** | Star only (1 listener, N clients) | Self-organizing mesh (all peers equal) |
+| **Single Point of Failure** | Yes -- listener dies, sync stops | No -- mesh reroutes automatically |
+| **TLS Setup** | Manual cert exchange between listener and clients | Mutual TLS built-in (just provide an identity) |
+| **Reconnection** | Code exponential backoff and dead-peer detection | Auto-healing with rerouting |
+| **Connection Tracking** | Maintain peer list, avoid duplicates, clean up stale | Managed by the replicator |
+| **Lines of P2P Code** | ~100+ | ~30 |
+
+### Key Architectural Difference
+
+```
+OLD: Star Topology (fragile)              NEW: Mesh Topology (resilient)
+
+     +--------+                           +--------+
+     | Kiosk  |                           | Kiosk  |------+
+     +---+----+                           +---+----+      |
+         |                                    |           |
+         v                                    v           v
+    +---------+                          +---------+  +---------+
+    |Listener |<----+                    | Kitchen |--| Manager |
+    |(Kitchen)|     |                    +---------+  +---------+
+    +---------+     |
+         ^          |                    Every device syncs with every
+         |          |                    other device. If one drops,
+    +---------+     |                    the rest continue syncing.
+    | Manager |-----+
+    +---------+
+
+    If the listener dies,
+    ALL sync stops.
+```
+
+The MultipeerReplicator handles discovery, topology, security, and fault tolerance internally -- letting developers focus on the application logic instead of distributed systems plumbing.
+
+---
+
 ## App Features
 
 | Role | Description |
 |------|-------------|
 | **Kiosk** | Self-order station -- browse the Taco Bell menu, build a cart, enter customer name, place order |
-| **Kitchen** | Real-time Kitchen Display System (KDS) -- order cards with food emojis, tap through status: New > Preparing > Ready > Picked Up |
+| **Kitchen** | Real-time Kitchen Display System (KDS) -- order cards with food images, tap through status: New > Preparing > Ready > Picked Up |
 | **Store Manager** | Dashboard with network status, order stats (New/Preparing/Ready/Picked Up), today's revenue, recent orders, and code spotlight |
 | **Status Board** | Customer-facing order status display with "Preparing" and "Ready for Pickup" columns |
 | **Peers** | Live P2P mesh visualization showing all connected devices and their roles |
@@ -178,7 +271,7 @@ On each emulator:
 ### 9. Test the Flow
 
 1. **Kiosk**: Browse the menu (Tacos, Burritos, Sides, Drinks), add items to cart, enter a customer name, tap "Place Order"
-2. **Kitchen**: Watch the order appear in real-time with food emojis -- tap "Start Preparing" > "Mark Ready" > "Picked Up"
+2. **Kitchen**: Watch the order appear in real-time with food images -- tap "Start Preparing" > "Mark Ready" > "Picked Up"
 3. **Place another order for the same customer name** -- items are appended to the existing open order
 4. **Status Board tab**: See orders split into "Preparing" and "Ready for Pickup" columns
 5. **Store Manager tab**: View dashboard with live order counts, today's revenue, and network status
@@ -223,7 +316,7 @@ done
 ### Key Talking Points
 - **No server URL anywhere in the code** -- no `ws://`, no cloud endpoint, no Sync Gateway
 - **MultipeerReplicator** only takes: a local database, a TLS identity, and a peer group name
-- **DNS-SD (Bonjour)** discovers peers via multicast on the local WiFi subnet
+- **DNS-SD (Android NSD)** discovers peers via multicast on the local WiFi subnet
 - **TLS mutual authentication** secures all peer connections
 - Orders sync in real-time even with airplane mode ON -- only local WiFi is needed
 
