@@ -1,7 +1,10 @@
 package com.kitchensync.data;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.couchbase.lite.Collection;
@@ -33,9 +36,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CouchbaseManager {
     private static final String TAG = "CouchbaseManager";
+    private static final String PREFS_NAME = "kitchensync_prefs";
+    private static final String PREF_DEVICE_UUID = "device_uuid";
+    private static final long DISCOVERY_BOOST_DELAY_MS = 3000;
+    private static final int MAX_BOOST_ATTEMPTS = 2;
 
     private static CouchbaseManager instance;
 
@@ -45,6 +55,12 @@ public class CouchbaseManager {
     private MultipeerReplicator replicator;
     private final List<ListenerToken> listenerTokens = new ArrayList<>();
     private String currentPeerId;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final AtomicBoolean peerFound = new AtomicBoolean(false);
+    private int boostAttempts = 0;
+    private TLSIdentity cachedIdentity;
+    private String persistentDeviceUuid;
 
     private CouchbaseManager() {}
 
@@ -57,6 +73,32 @@ public class CouchbaseManager {
 
     public void init(Context appContext) {
         this.context = appContext.getApplicationContext();
+        // Load or create persistent device UUID
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        persistentDeviceUuid = prefs.getString(PREF_DEVICE_UUID, null);
+        if (persistentDeviceUuid == null) {
+            persistentDeviceUuid = UUID.randomUUID().toString().substring(0, 8);
+            prefs.edit().putString(PREF_DEVICE_UUID, persistentDeviceUuid).apply();
+        }
+    }
+
+    /**
+     * Pre-warm: open DB + create TLS identity on a background thread.
+     * Called from Application.onCreate() so everything is ready before
+     * RoleSelectionActivity appears.
+     */
+    public void preWarm() {
+        executor.execute(() -> {
+            try {
+                long start = System.currentTimeMillis();
+                openDatabase();
+                cachedIdentity = getOrCreateIdentity();
+                long elapsed = System.currentTimeMillis() - start;
+                Log.i(TAG, "Pre-warm complete in " + elapsed + "ms (DB + TLS identity ready)");
+            } catch (Exception e) {
+                Log.e(TAG, "Pre-warm failed", e);
+            }
+        });
     }
 
     public void openDatabase() throws CouchbaseLiteException {
@@ -75,26 +117,31 @@ public class CouchbaseManager {
         Log.i(TAG, "Database opened: " + Constants.DATABASE_NAME);
     }
 
-    public void startPeerSync(String deviceName, DeviceRole role) throws Exception {
+    /**
+     * Start P2P sync immediately (called before role selection).
+     * Discovery begins right away so peers find each other while
+     * the user is still on the role selection screen.
+     */
+    public void startPeerSyncEarly() throws Exception {
         if (replicator != null) {
             Log.w(TAG, "Peer sync already running");
             return;
         }
 
-        // 1. Get or create TLS Identity
-        TLSIdentity identity = getOrCreateIdentity();
+        // Use cached identity from pre-warm, or create one now
+        TLSIdentity identity = cachedIdentity != null ? cachedIdentity : getOrCreateIdentity();
 
-        // 2. Collection configuration
+        // Collection configuration
         MultipeerCollectionConfiguration colConfig =
                 new MultipeerCollectionConfiguration.Builder(collection).build();
         Set<MultipeerCollectionConfiguration> collections = new HashSet<>();
         collections.add(colConfig);
 
-        // 3. Authenticator (accept-all for demo)
+        // Authenticator (accept-all for demo)
         MultipeerCertificateAuthenticator authenticator =
                 new MultipeerCertificateAuthenticator((peer, certs) -> true);
 
-        // 4. Replicator configuration
+        // Replicator configuration
         MultipeerReplicatorConfiguration config = new MultipeerReplicatorConfiguration.Builder()
                 .setPeerGroupID(Constants.PEER_GROUP_ID)
                 .setIdentity(identity)
@@ -102,16 +149,34 @@ public class CouchbaseManager {
                 .setCollections(collections)
                 .build();
 
-        // 5. Create and start -- auto-discovery begins immediately
+        // Create and start -- auto-discovery begins immediately
         replicator = new MultipeerReplicator(config);
         registerListeners();
         replicator.start();
 
         PeerInfo.PeerId peerId = replicator.getPeerId();
         currentPeerId = peerId != null ? peerId.toString() : "unknown";
-        Log.i(TAG, "MultipeerReplicator started. PeerId: " + currentPeerId);
+        Log.i(TAG, "MultipeerReplicator started EARLY. PeerId: " + currentPeerId);
 
-        // Write device registration document
+        // Schedule discovery boost: if no peers found in 3s, restart to force fresh mDNS
+        peerFound.set(false);
+        boostAttempts = 0;
+        scheduleDiscoveryBoost();
+    }
+
+    /**
+     * Write device document after role selection.
+     * P2P sync is already running from startPeerSyncEarly().
+     */
+    public void registerDeviceRole(String deviceName, DeviceRole role) {
+        writeDeviceDocument(deviceName, role);
+    }
+
+    /**
+     * Legacy method - starts P2P sync with role (used if early start wasn't called).
+     */
+    public void startPeerSync(String deviceName, DeviceRole role) throws Exception {
+        startPeerSyncEarly();
         writeDeviceDocument(deviceName, role);
     }
 
@@ -166,17 +231,31 @@ public class CouchbaseManager {
         }
     }
 
+    public boolean isDatabaseReady() {
+        return database != null && collection != null;
+    }
+
     // --- Private helpers ---
 
     private TLSIdentity getOrCreateIdentity() throws CouchbaseLiteException {
-        // Delete any existing identity to ensure a fresh, unique one per app launch
-        // This avoids DNS-SD name conflicts when multiple emulators share the same Build.MODEL
-        TLSIdentity.deleteIdentity(Constants.IDENTITY_LABEL);
+        // Use persistent UUID so the same device keeps the same identity across restarts.
+        // Each emulator/device gets a unique UUID stored in SharedPreferences,
+        // avoiding DNS-SD name conflicts without the overhead of recreating certs every launch.
+        String suffix = persistentDeviceUuid != null
+                ? persistentDeviceUuid
+                : UUID.randomUUID().toString().substring(0, 8);
 
+        // Try to reuse existing identity first
+        TLSIdentity existing = TLSIdentity.getIdentity(Constants.IDENTITY_LABEL);
+        if (existing != null) {
+            Log.i(TAG, "Reusing existing TLS identity");
+            return existing;
+        }
+
+        // Create new identity only if none exists
         Map<String, String> attrs = new HashMap<>();
-        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
         attrs.put(TLSIdentity.CERT_ATTRIBUTE_COMMON_NAME,
-                "KitchenSync-" + Build.MODEL + "-" + uniqueSuffix);
+                "KitchenSync-" + Build.MODEL + "-" + suffix);
         attrs.put(TLSIdentity.CERT_ATTRIBUTE_ORGANIZATION, "Kitchen Sync");
 
         Calendar cal = Calendar.getInstance();
@@ -188,8 +267,51 @@ public class CouchbaseManager {
 
         TLSIdentity identity = TLSIdentity.createIdentity(
                 keyUsages, attrs, cal.getTime(), Constants.IDENTITY_LABEL);
-        Log.i(TAG, "Created TLS identity: KitchenSync-" + Build.MODEL + "-" + uniqueSuffix);
+        Log.i(TAG, "Created TLS identity: KitchenSync-" + Build.MODEL + "-" + suffix);
         return identity;
+    }
+
+    /**
+     * Discovery boost: if no peers are found within DISCOVERY_BOOST_DELAY_MS,
+     * stop and restart the replicator to force a fresh DNS-SD announcement.
+     * This handles cases where the initial mDNS advertisement was missed.
+     */
+    private void scheduleDiscoveryBoost() {
+        mainHandler.postDelayed(() -> {
+            if (peerFound.get() || replicator == null) {
+                Log.i(TAG, "Discovery boost: peers already found, skipping");
+                return;
+            }
+
+            if (boostAttempts >= MAX_BOOST_ATTEMPTS) {
+                Log.i(TAG, "Discovery boost: max attempts reached, relying on normal discovery");
+                return;
+            }
+
+            boostAttempts++;
+            Log.i(TAG, "Discovery boost #" + boostAttempts
+                    + ": no peers found after " + DISCOVERY_BOOST_DELAY_MS
+                    + "ms, restarting replicator to force fresh mDNS announcement");
+
+            // Stop and restart to force a new DNS-SD advertisement cycle
+            executor.execute(() -> {
+                try {
+                    if (replicator != null) {
+                        replicator.stop();
+                        Log.i(TAG, "Discovery boost: replicator stopped");
+                        // Brief pause to let mDNS clean up
+                        Thread.sleep(500);
+                        replicator.start();
+                        Log.i(TAG, "Discovery boost: replicator restarted");
+                        // Schedule another check
+                        mainHandler.postDelayed(() -> scheduleDiscoveryBoost(),
+                                DISCOVERY_BOOST_DELAY_MS);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Discovery boost failed", e);
+                }
+            });
+        }, DISCOVERY_BOOST_DELAY_MS);
     }
 
     private void registerListeners() {
@@ -210,6 +332,9 @@ public class CouchbaseManager {
             String peerId = status.getPeer().toString();
             boolean online = status.isOnline();
             Log.i(TAG, "Peer " + (online ? "discovered" : "lost") + ": " + peerId);
+            if (online) {
+                peerFound.set(true);  // Cancel discovery boost
+            }
             bus.firePeerDiscovered(peerId, online);
         });
         listenerTokens.add(discoveryToken);

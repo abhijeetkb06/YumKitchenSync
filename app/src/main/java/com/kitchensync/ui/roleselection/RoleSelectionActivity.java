@@ -30,20 +30,31 @@ public class RoleSelectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_role_selection);
 
-        initDatabase();
+        initDatabaseAndStartSync();
         setupRoleCards();
     }
 
-    private void initDatabase() {
+    private void initDatabaseAndStartSync() {
         try {
             CouchbaseManager manager = CouchbaseManager.getInstance();
-            manager.init(this);
-            manager.openDatabase();
+            // init() + preWarm() already called in KitchenSyncApp.onCreate(),
+            // but ensure DB is open on main thread if pre-warm hasn't finished yet
+            if (!manager.isDatabaseReady()) {
+                manager.init(this);
+                manager.openDatabase();
+            }
             new MenuRepository().seedMenuIfNeeded();
             Log.i(TAG, "Database initialized and menu seeded");
+
+            // Start P2P sync IMMEDIATELY -- before the user picks a role.
+            // This gives DNS-SD time to discover peers while the user is
+            // still looking at the role selection screen.
+            manager.startPeerSyncEarly();
+            Log.i(TAG, "P2P sync started early -- discovering peers while user selects role");
+
         } catch (Exception e) {
-            Log.e(TAG, "Failed to initialize database", e);
-            Toast.makeText(this, "Database error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Failed to initialize database or start sync", e);
+            Toast.makeText(this, "Startup error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -89,13 +100,14 @@ public class RoleSelectionActivity extends AppCompatActivity {
     }
 
     private void launchWithRole(DeviceRole role) {
-        // Start P2P sync
+        // P2P sync is already running from initDatabaseAndStartSync().
+        // Just register the device document with the selected role.
         try {
             String deviceName = Build.MODEL + " - " + role.getDisplayName();
-            CouchbaseManager.getInstance().startPeerSync(deviceName, role);
+            CouchbaseManager.getInstance().registerDeviceRole(deviceName, role);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to start peer sync", e);
-            Toast.makeText(this, "Sync error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Failed to register device role", e);
+            Toast.makeText(this, "Role registration error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
 
         Intent intent = new Intent(this, MainActivity.class);
