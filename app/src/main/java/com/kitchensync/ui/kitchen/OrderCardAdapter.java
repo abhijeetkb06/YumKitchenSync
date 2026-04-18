@@ -25,6 +25,15 @@ import com.kitchensync.util.TimeUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * RecyclerView adapter for kitchen order cards. Each card displays the order label,
+ * elapsed time, food item list with images, and a status action button.
+ *
+ * The action button progresses through the order lifecycle:
+ * New (Start Preparing) -> Preparing (Mark Ready) -> Ready (Picked Up)
+ *
+ * Includes a periodic timer to refresh elapsed time displays every 10 seconds.
+ */
 public class OrderCardAdapter extends RecyclerView.Adapter<OrderCardAdapter.ViewHolder> {
 
     public interface OnOrderActionListener {

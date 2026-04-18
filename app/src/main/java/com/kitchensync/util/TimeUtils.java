@@ -3,6 +3,10 @@ package com.kitchensync.util;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Time formatting utilities for displaying elapsed order durations
+ * in the kitchen display and status board.
+ */
 public final class TimeUtils {
 
     private TimeUtils() {}

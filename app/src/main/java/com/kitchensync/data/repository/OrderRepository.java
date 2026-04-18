@@ -23,6 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Repository for CRUD operations on order documents in Couchbase Lite.
+ *
+ * Provides methods for saving orders, updating status, querying by filter,
+ * creating live queries for reactive UI, and appending items to existing orders.
+ * All document operations go through the singleton CouchbaseManager for
+ * database and collection access.
+ */
 public class OrderRepository {
     private static final String TAG = "OrderRepository";
 

@@ -1,5 +1,9 @@
 package com.kitchensync.util;
 
+/**
+ * Application-wide constants for database configuration, peer group identity,
+ * document types, order status flow, and intent extras.
+ */
 public final class Constants {
     private Constants() {}
 

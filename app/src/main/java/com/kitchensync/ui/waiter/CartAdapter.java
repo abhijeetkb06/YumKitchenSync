@@ -16,6 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Shopping cart adapter for the kiosk self-order screen.
+ * Supports adding items (with quantity merging for duplicates), removing items,
+ * and computing the running total.
+ */
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
     public interface OnCartChangeListener {

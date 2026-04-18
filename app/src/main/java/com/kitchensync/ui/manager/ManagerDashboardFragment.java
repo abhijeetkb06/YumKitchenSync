@@ -27,6 +27,16 @@ import com.kitchensync.util.Constants;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Store Manager dashboard fragment. Provides a high-level operational overview:
+ * - Network status: sync indicator and connected peer count
+ * - Order statistics: counts by status (New, Preparing, Ready, Picked Up)
+ * - Revenue: today's total from all completed orders
+ * - Recent orders: scrollable list of the latest orders across all statuses
+ *
+ * Listens to both Couchbase Lite live queries (for order data) and
+ * {@link PeerEventBus} (for network status updates).
+ */
 public class ManagerDashboardFragment extends Fragment implements PeerEventBus.PeerEventListener {
     private static final String TAG = "ManagerDashboard";
 

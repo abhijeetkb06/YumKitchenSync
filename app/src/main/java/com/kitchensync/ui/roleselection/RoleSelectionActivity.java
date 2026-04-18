@@ -20,6 +20,17 @@ import com.kitchensync.ui.main.MainActivity;
 import com.kitchensync.util.Constants;
 import com.kitchensync.util.PermissionHelper;
 
+/**
+ * Launcher activity that presents the three QSR device roles (Kiosk, Kitchen, Store Manager).
+ *
+ * On creation, this activity:
+ * 1. Ensures the Couchbase Lite database is open and menu items are seeded
+ * 2. Starts MultipeerReplicator BEFORE the user selects a role, giving DNS-SD
+ *    time to discover peers while the user is still on this screen
+ * 3. Handles runtime permission requests (location, nearby WiFi devices)
+ *
+ * Once a role is selected, it writes the device document and launches MainActivity.
+ */
 public class RoleSelectionActivity extends AppCompatActivity {
     private static final String TAG = "RoleSelection";
 

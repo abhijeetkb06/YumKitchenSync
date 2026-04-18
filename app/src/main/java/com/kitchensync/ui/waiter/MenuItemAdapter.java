@@ -18,6 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Grid adapter for the kiosk menu catalog. Displays food images, names, prices,
+ * and an "Add" button that delegates to the parent fragment via callback.
+ */
 public class MenuItemAdapter extends RecyclerView.Adapter<MenuItemAdapter.ViewHolder> {
 
     public interface OnItemClickListener {

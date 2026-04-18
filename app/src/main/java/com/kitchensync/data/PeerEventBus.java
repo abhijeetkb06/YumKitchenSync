@@ -5,8 +5,19 @@ import android.os.Looper;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Thread-safe event bus for P2P replication events.
+ *
+ * Bridges the gap between Couchbase Lite's replicator callbacks (which fire on
+ * background threads) and the UI layer. All events are dispatched to the main
+ * thread via a Handler, so listeners can safely update views.
+ *
+ * Uses the observer pattern with {@link PeerEventListener} for loose coupling
+ * between CouchbaseManager and the various UI fragments.
+ */
 public class PeerEventBus {
 
+    /** Listener interface for P2P lifecycle events. All callbacks run on the main thread. */
     public interface PeerEventListener {
         default void onPeerDiscovered(String peerId, boolean isOnline) {}
         default void onReplicatorStatusChanged(boolean isActive, String error) {}

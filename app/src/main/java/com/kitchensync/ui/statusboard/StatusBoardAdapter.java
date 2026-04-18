@@ -14,6 +14,7 @@ import com.kitchensync.data.model.Order;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Adapter for the status board columns. Displays order label and item count. */
 public class StatusBoardAdapter extends RecyclerView.Adapter<StatusBoardAdapter.ViewHolder> {
 
     private List<Order> orders = new ArrayList<>();

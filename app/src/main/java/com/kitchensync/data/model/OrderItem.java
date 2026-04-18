@@ -3,6 +3,10 @@ package com.kitchensync.data.model;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Domain model for a single line item within an order.
+ * Tracks quantity, unit price, optional notes, and a reference to the menu item image.
+ */
 public class OrderItem {
     private String menuItemId;
     private String name;

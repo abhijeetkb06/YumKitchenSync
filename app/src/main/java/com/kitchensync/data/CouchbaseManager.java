@@ -46,6 +46,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Singleton manager for Couchbase Lite database and MultipeerReplicator lifecycle.
+ *
+ * Responsibilities:
+ * - Opens and manages the local Couchbase Lite database instance
+ * - Creates and caches TLS identities (per-device, stored in Android Keystore)
+ * - Configures and starts the MultipeerReplicator for automatic P2P discovery and sync
+ * - Implements a two-phase discovery boost to handle unreliable multicast environments
+ *   (e.g., Android hotspot where mDNS packets are frequently dropped)
+ * - Provides auto-recovery when the replicator goes inactive unexpectedly
+ * - Manages WiFi MulticastLock and foreground service for background persistence
+ *
+ * @see MultipeerReplicator
+ * @see PeerEventBus
+ */
 public class CouchbaseManager {
     private static final String TAG = "CouchbaseManager";
     private static final String PREFS_NAME = "kitchensync_prefs";

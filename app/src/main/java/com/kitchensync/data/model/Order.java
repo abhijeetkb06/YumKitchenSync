@@ -10,6 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Domain model representing a QSR order.
+ *
+ * An order contains a customer name, numbered label, list of items, total amount,
+ * and status tracking. Supports serialization to/from Couchbase Lite documents
+ * for P2P replication. Status flow: new -> preparing -> ready -> picked_up.
+ */
 public class Order {
     private String orderId;
     private int orderNumber;

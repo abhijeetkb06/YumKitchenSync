@@ -10,6 +10,11 @@ import androidx.core.content.ContextCompat;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility for managing runtime permissions required by MultipeerReplicator's
+ * DNS-SD discovery. On Android 13+ this includes NEARBY_WIFI_DEVICES; on
+ * Android 10-12 it falls back to fine/coarse location permissions.
+ */
 public class PermissionHelper {
 
     public static final int REQUEST_CODE_PERMISSIONS = 1001;

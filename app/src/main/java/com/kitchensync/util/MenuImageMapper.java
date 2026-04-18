@@ -5,6 +5,11 @@ import com.kitchensync.R;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Maps menu item image keys (stored in Couchbase documents) to Android drawable
+ * resource IDs. Provides a single lookup point for resolving food images across
+ * the kiosk menu grid and kitchen order cards.
+ */
 public final class MenuImageMapper {
     private MenuImageMapper() {}
 

@@ -3,6 +3,10 @@ package com.kitchensync.data.model;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Domain model for a menu item in the QSR catalog.
+ * Supports serialization to/from Couchbase Lite documents via map conversion.
+ */
 public class MenuItem {
     private String menuItemId;
     private String name;

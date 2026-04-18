@@ -22,6 +22,13 @@ import com.kitchensync.util.Constants;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Customer-facing order status board with three columns: New, Preparing, and Ready.
+ *
+ * Uses a Couchbase Lite live query to reactively update when order statuses change
+ * (either locally from the kitchen or via P2P sync from another device). Orders
+ * flow left-to-right: New (placed) -> Preparing (kitchen started) -> Ready (pickup).
+ */
 public class OrderStatusBoardFragment extends Fragment {
     private static final String TAG = "OrderStatusBoard";
 

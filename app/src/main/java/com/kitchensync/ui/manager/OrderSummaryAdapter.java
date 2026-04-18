@@ -18,6 +18,10 @@ import com.kitchensync.util.TimeUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Adapter for the manager dashboard's recent orders list.
+ * Shows order label, item count, elapsed time, and a color-coded status badge.
+ */
 public class OrderSummaryAdapter extends RecyclerView.Adapter<OrderSummaryAdapter.ViewHolder> {
 
     private List<Order> orders = new ArrayList<>();

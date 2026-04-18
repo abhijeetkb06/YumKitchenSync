@@ -1,5 +1,9 @@
 package com.kitchensync.data.model;
 
+/**
+ * Enum of QSR device roles used for device identification in the P2P mesh.
+ * Each role has a display name and description shown on the role selection screen.
+ */
 public enum DeviceRole {
     KIOSK("Kiosk", "Self-order station"),
     KITCHEN("Kitchen", "Receives and prepares orders"),

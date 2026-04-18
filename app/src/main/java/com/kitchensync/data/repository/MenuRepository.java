@@ -10,6 +10,14 @@ import com.kitchensync.data.model.MenuItem;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository for the static QSR menu catalog.
+ *
+ * Seeds the Couchbase Lite database with predefined menu items on first launch
+ * and provides category-based filtering. Menu items are stored as documents
+ * and synced across devices via P2P replication, ensuring all kiosks show
+ * the same catalog.
+ */
 public class MenuRepository {
 
     private static final MenuItem[] SEED_ITEMS = {

@@ -19,6 +19,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Custom view that renders an animated P2P mesh network topology.
+ *
+ * Draws the current device as a center node with peer nodes arranged in an
+ * orbital layout. Features include:
+ * - Animated peer appearance/disappearance with overshoot interpolation
+ * - Pulsing ring animation on the center node to indicate active discovery
+ * - Connection lines that flash blue on document sync events
+ * - Color-coded peer nodes based on device role (Kiosk, Kitchen, Manager)
+ */
 public class PeerMeshView extends View {
 
     private final Paint centerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);

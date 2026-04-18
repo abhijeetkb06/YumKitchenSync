@@ -20,6 +20,14 @@ import com.kitchensync.R;
 import com.kitchensync.data.CouchbaseManager;
 import com.kitchensync.data.PeerEventBus;
 
+/**
+ * P2P mesh visualization fragment. Displays the live network topology with an
+ * animated mesh view (center node = this device, orbital nodes = peers) and a
+ * detailed peer list showing device names, roles, and connection status.
+ *
+ * Listens to {@link PeerEventBus} for real-time peer discovery, replicator status,
+ * and document sync events. Connection lines flash blue on each sync.
+ */
 public class PeerDiscoveryFragment extends Fragment implements PeerEventBus.PeerEventListener {
     private static final String TAG = "PeerDiscovery";
 

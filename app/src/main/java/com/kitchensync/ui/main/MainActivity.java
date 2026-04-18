@@ -23,6 +23,13 @@ import com.kitchensync.ui.statusboard.OrderStatusBoardFragment;
 import com.kitchensync.ui.waiter.WaiterMenuFragment;
 import com.kitchensync.util.Constants;
 
+/**
+ * Main activity hosting the 5-tab bottom navigation (Kiosk, Status Board, Kitchen,
+ * Manager, Peers). Each tab lazily instantiates its fragment on first selection.
+ *
+ * Listens to {@link PeerEventBus} events to update the toolbar subtitle with
+ * the live peer count, and manages the CouchbaseManager lifecycle on destroy.
+ */
 public class MainActivity extends AppCompatActivity implements PeerEventBus.PeerEventListener {
 
     private DeviceRole currentRole;

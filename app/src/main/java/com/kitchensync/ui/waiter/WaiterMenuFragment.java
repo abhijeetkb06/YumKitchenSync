@@ -31,6 +31,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Kiosk / self-order fragment. Displays the menu in a grid with category filters,
+ * manages a shopping cart, and places orders into the Couchbase Lite database.
+ *
+ * Supports order merging: if the customer name matches an existing open order,
+ * the new items are appended instead of creating a duplicate order.
+ *
+ * Order numbers are tracked via an atomic counter that syncs with the database
+ * to account for orders placed on other kiosks via P2P replication.
+ */
 public class WaiterMenuFragment extends Fragment implements MenuItemAdapter.OnItemClickListener,
         CartAdapter.OnCartChangeListener {
 

@@ -24,6 +24,15 @@ import com.kitchensync.util.Constants;
 
 import java.util.List;
 
+/**
+ * Kitchen Display System (KDS) fragment. Shows active orders as cards in a grid layout.
+ *
+ * Uses a Couchbase Lite live query to reactively update the display whenever orders
+ * are created, modified, or synced from other devices via P2P replication.
+ * Provides haptic feedback when new orders arrive.
+ *
+ * Order lifecycle actions: New -> Start Preparing -> Mark Ready -> Picked Up
+ */
 public class KitchenDisplayFragment extends Fragment implements OrderCardAdapter.OnOrderActionListener {
     private static final String TAG = "KitchenDisplay";
 

@@ -16,6 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * RecyclerView adapter for the peer list in the P2P mesh view.
+ * Displays each connected peer with name, role, connection status indicator,
+ * and replication activity level. Maintains an indexed map for O(1) peer lookups.
+ */
 public class PeerListAdapter extends RecyclerView.Adapter<PeerListAdapter.ViewHolder> {
 
     public static class PeerInfo {
