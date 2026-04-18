@@ -313,15 +313,6 @@ for emu in emulator-5554 emulator-5556 emulator-5558; do
 done
 ```
 
-### Key Talking Points
-- **No server URL anywhere in the code** -- no `ws://`, no cloud endpoint, no Sync Gateway
-- **MultipeerReplicator** only takes: a local database, a TLS identity, and a peer group name
-- **DNS-SD (Android NSD)** discovers peers via multicast on the local WiFi subnet
-- **TLS mutual authentication** secures all peer connections
-- Orders sync in real-time even with airplane mode ON -- only local WiFi is needed
-
----
-
 ## Architecture
 
 ```
