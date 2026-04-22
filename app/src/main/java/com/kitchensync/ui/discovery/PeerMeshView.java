@@ -55,6 +55,7 @@ public class PeerMeshView extends View {
     private float pulseScale = 1.0f;
     private float pulseAlpha = 0.6f;
     private ValueAnimator pulseAnimator;
+    private boolean isReconnecting = false;
 
     public PeerMeshView(Context context) {
         super(context);
@@ -119,8 +120,6 @@ public class PeerMeshView extends View {
     public void addPeer(String peerId, String label, int color) {
         if (!peerIds.contains(peerId)) {
             peerIds.add(peerId);
-            peerLabels.put(peerId, label);
-            peerColors.put(peerId, color);
             peerScales.put(peerId, 0f);
 
             // Animate the peer appearing
@@ -133,6 +132,10 @@ public class PeerMeshView extends View {
             });
             animator.start();
         }
+        // Always update label and color (handles role changes and late-arriving device docs)
+        peerLabels.put(peerId, label);
+        peerColors.put(peerId, color);
+        invalidate();
     }
 
     public void removePeer(String peerId) {
@@ -163,9 +166,20 @@ public class PeerMeshView extends View {
             postDelayed(() -> {
                 linePaint.setColor(ContextCompat.getColor(getContext(), R.color.peer_line));
                 linePaint.setStrokeWidth(3f);
+                if (isReconnecting) linePaint.setAlpha(100);
                 invalidate();
             }, 300);
         });
+    }
+
+    public void setReconnecting(boolean reconnecting) {
+        this.isReconnecting = reconnecting;
+        if (reconnecting) {
+            linePaint.setAlpha(100);
+        } else {
+            linePaint.setAlpha(255);
+        }
+        invalidate();
     }
 
     public void clearPeers() {

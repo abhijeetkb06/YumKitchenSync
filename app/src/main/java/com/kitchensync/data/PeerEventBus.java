@@ -23,6 +23,7 @@ public class PeerEventBus {
         default void onReplicatorStatusChanged(boolean isActive, String error) {}
         default void onPeerReplicatorStatusChanged(String peerId, boolean isOutgoing, String activity, String error) {}
         default void onDocumentSynced(String peerId, boolean isPush, int docCount) {}
+        default void onNetworkStateChanged(boolean isAvailable) {}
     }
 
     private static PeerEventBus instance;
@@ -76,6 +77,14 @@ public class PeerEventBus {
         mainHandler.post(() -> {
             for (PeerEventListener l : listeners) {
                 l.onDocumentSynced(peerId, isPush, docCount);
+            }
+        });
+    }
+
+    public void fireNetworkStateChanged(boolean isAvailable) {
+        mainHandler.post(() -> {
+            for (PeerEventListener l : listeners) {
+                l.onNetworkStateChanged(isAvailable);
             }
         });
     }

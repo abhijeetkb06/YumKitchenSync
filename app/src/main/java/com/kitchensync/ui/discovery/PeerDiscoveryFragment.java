@@ -68,6 +68,14 @@ public class PeerDiscoveryFragment extends Fragment implements PeerEventBus.Peer
     public void onResume() {
         super.onResume();
         PeerEventBus.getInstance().register(this);
+        // Refresh all peer info in case device docs changed while we were paused
+        refreshAllPeers();
+        // Update status based on current network state
+        if (!CouchbaseManager.getInstance().isNetworkAvailable()) {
+            textStatus.setText(getString(R.string.reconnecting));
+            setIndicatorColor(R.color.ks_amber);
+            meshView.setReconnecting(true);
+        }
     }
 
     @Override
@@ -84,6 +92,22 @@ public class PeerDiscoveryFragment extends Fragment implements PeerEventBus.Peer
             updateStatusDisplay();
         } catch (Exception e) {
             Log.e(TAG, "Error loading existing peers", e);
+        }
+    }
+
+    /**
+     * Re-reads device documents for all known peers and updates the UI.
+     * Called on resume to catch role changes that happened while this
+     * fragment was paused (e.g., user was on another tab).
+     */
+    private void refreshAllPeers() {
+        try {
+            for (String peerId : CouchbaseManager.getInstance().getNeighborPeers()) {
+                addPeerToView(peerId, true);
+            }
+            updateStatusDisplay();
+        } catch (Exception e) {
+            Log.e(TAG, "Error refreshing peers", e);
         }
     }
 
@@ -166,21 +190,56 @@ public class PeerDiscoveryFragment extends Fragment implements PeerEventBus.Peer
         if (isActive) {
             textStatus.setText(getString(R.string.replicator_active));
             setIndicatorColor(R.color.success_green);
+            meshView.setReconnecting(false);
         } else {
-            textStatus.setText(getString(R.string.replicator_inactive));
-            setIndicatorColor(R.color.status_picked_up);
+            // Do NOT clear peers — they stay visible with "reconnecting" status.
+            // Individual peers are removed by onPeerReplicatorStatusChanged or
+            // refreshed by onPeerDiscovered when the new replicator starts.
+            textStatus.setText(getString(R.string.reconnecting));
+            setIndicatorColor(R.color.ks_amber);
+            listAdapter.updateAllPeerStatus("reconnecting");
+            meshView.setReconnecting(true);
         }
     }
 
     @Override
     public void onPeerReplicatorStatusChanged(String peerId, boolean isOutgoing, String activity, String error) {
         if (!isAdded()) return;
-        listAdapter.updatePeerStatus(peerId, activity);
+        if ("stopped".equals(activity) && error != null) {
+            // Peer replicator stopped with error — connection lost.
+            // MultipeerReplicator may not fire onPeerDiscovered(false) on the
+            // device that lost the network, so treat this as peer going offline.
+            meshView.removePeer(peerId);
+            listAdapter.removePeer(peerId);
+            updateStatusDisplay();
+        } else {
+            listAdapter.updatePeerStatus(peerId, activity);
+        }
     }
 
     @Override
     public void onDocumentSynced(String peerId, boolean isPush, int docCount) {
         if (!isAdded()) return;
         meshView.flashSyncLine(peerId);
+        // Re-read device document on any sync event to pick up role changes and
+        // late-arriving device info (fixes race where discovery fires
+        // before the device document has synced)
+        addPeerToView(peerId, true);
+        updateStatusDisplay();
+    }
+
+    @Override
+    public void onNetworkStateChanged(boolean isAvailable) {
+        if (!isAdded()) return;
+        if (!isAvailable) {
+            textStatus.setText(getString(R.string.reconnecting));
+            setIndicatorColor(R.color.ks_amber);
+            listAdapter.updateAllPeerStatus("reconnecting");
+            meshView.setReconnecting(true);
+        } else {
+            textStatus.setText(getString(R.string.searching));
+            setIndicatorColor(R.color.ks_amber);
+            meshView.setReconnecting(false);
+        }
     }
 }

@@ -3,6 +3,10 @@ package com.kitchensync.data;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
@@ -70,13 +74,14 @@ public class CouchbaseManager {
     private static final long DISCOVERY_BOOST_JITTER_MS = 2000;
     private static final long AUTO_RECOVERY_DELAY_MS = 2000;
     private static final int FAST_BOOST_ATTEMPTS = 4;
+    private static final int MAX_BOOST_ATTEMPTS = 40;
 
     private static CouchbaseManager instance;
 
     private Context context;
     private Database database;
     private Collection collection;
-    private MultipeerReplicator replicator;
+    private volatile MultipeerReplicator replicator;
     private final List<ListenerToken> listenerTokens = new ArrayList<>();
     private String currentPeerId;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -84,12 +89,16 @@ public class CouchbaseManager {
     private final AtomicBoolean peerFound = new AtomicBoolean(false);
     private final AtomicBoolean intentionallyStopped = new AtomicBoolean(false);
     private final AtomicBoolean boostInProgress = new AtomicBoolean(false);
+    private final AtomicBoolean replicatorCreationInProgress = new AtomicBoolean(false);
     private final Random random = new Random();
     private int boostAttempts = 0;
     private volatile TLSIdentity cachedIdentity;
     private volatile boolean preWarmDone = false;
+    private volatile boolean networkAvailable = true;
     private String persistentDeviceUuid;
     private WifiManager.MulticastLock multicastLock;
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     private CouchbaseManager() {}
 
@@ -169,6 +178,7 @@ public class CouchbaseManager {
 
         intentionallyStopped.set(false);
         acquireMulticastLock();
+        registerNetworkCallback();
         createAndStartReplicator();
         Log.i(TAG, "MultipeerReplicator started EARLY. PeerId: " + currentPeerId);
         // Start foreground service AFTER replicator is running to avoid
@@ -199,7 +209,9 @@ public class CouchbaseManager {
 
     public void stopPeerSync() {
         intentionallyStopped.set(true);
+        mainHandler.removeCallbacksAndMessages(null);
         tearDownReplicator();
+        unregisterNetworkCallback();
         releaseMulticastLock();
         stopForegroundService();
     }
@@ -222,6 +234,7 @@ public class CouchbaseManager {
     public Collection getCollection() { return collection; }
     public String getCurrentPeerId() { return currentPeerId; }
     public MultipeerReplicator getReplicator() { return replicator; }
+    public boolean isNetworkAvailable() { return networkAvailable; }
 
     public Set<String> getNeighborPeers() {
         Set<String> result = new HashSet<>();
@@ -258,29 +271,41 @@ public class CouchbaseManager {
      * Always call tearDownReplicator() before calling this again.
      */
     private void createAndStartReplicator() throws Exception {
-        TLSIdentity identity = cachedIdentity != null ? cachedIdentity : getOrCreateIdentity();
+        if (!networkAvailable) {
+            Log.w(TAG, "createAndStartReplicator: no network, skipping");
+            return;
+        }
+        if (!replicatorCreationInProgress.compareAndSet(false, true)) {
+            Log.w(TAG, "createAndStartReplicator: already in progress, skipping");
+            return;
+        }
+        try {
+            TLSIdentity identity = cachedIdentity != null ? cachedIdentity : getOrCreateIdentity();
 
-        MultipeerCollectionConfiguration colConfig =
-                new MultipeerCollectionConfiguration.Builder(collection).build();
-        Set<MultipeerCollectionConfiguration> collections = new HashSet<>();
-        collections.add(colConfig);
+            MultipeerCollectionConfiguration colConfig =
+                    new MultipeerCollectionConfiguration.Builder(collection).build();
+            Set<MultipeerCollectionConfiguration> collections = new HashSet<>();
+            collections.add(colConfig);
 
-        MultipeerCertificateAuthenticator authenticator =
-                new MultipeerCertificateAuthenticator((peer, certs) -> true);
+            MultipeerCertificateAuthenticator authenticator =
+                    new MultipeerCertificateAuthenticator((peer, certs) -> true);
 
-        MultipeerReplicatorConfiguration config = new MultipeerReplicatorConfiguration.Builder()
-                .setPeerGroupID(Constants.PEER_GROUP_ID)
-                .setIdentity(identity)
-                .setAuthenticator(authenticator)
-                .setCollections(collections)
-                .build();
+            MultipeerReplicatorConfiguration config = new MultipeerReplicatorConfiguration.Builder()
+                    .setPeerGroupID(Constants.PEER_GROUP_ID)
+                    .setIdentity(identity)
+                    .setAuthenticator(authenticator)
+                    .setCollections(collections)
+                    .build();
 
-        replicator = new MultipeerReplicator(config);
-        registerListeners();
-        replicator.start();
+            replicator = new MultipeerReplicator(config);
+            registerListeners();
+            replicator.start();
 
-        PeerInfo.PeerId peerId = replicator.getPeerId();
-        currentPeerId = peerId != null ? peerId.toString() : currentPeerId;
+            PeerInfo.PeerId peerId = replicator.getPeerId();
+            currentPeerId = peerId != null ? peerId.toString() : currentPeerId;
+        } finally {
+            replicatorCreationInProgress.set(false);
+        }
     }
 
     /**
@@ -327,6 +352,71 @@ public class CouchbaseManager {
         if (multicastLock != null && multicastLock.isHeld()) {
             multicastLock.release();
             Log.i(TAG, "MulticastLock released");
+        }
+    }
+
+    private void refreshMulticastLock() {
+        releaseMulticastLock();
+        acquireMulticastLock();
+        Log.i(TAG, "MulticastLock refreshed for new network interface");
+    }
+
+    private void registerNetworkCallback() {
+        if (connectivityManager != null) return;
+        connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkRequest request = new NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .build();
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                Log.i(TAG, "Network available — triggering P2P reconnection");
+                networkAvailable = true;
+                refreshMulticastLock();
+                PeerEventBus.getInstance().fireNetworkStateChanged(true);
+                // Skip teardown+recreate if replicator was just created (initial startup)
+                if (replicator != null) {
+                    Log.i(TAG, "Network available: replicator already running, skipping recreate");
+                    return;
+                }
+                executor.execute(() -> {
+                    try {
+                        tearDownReplicator();
+                        Thread.sleep(500);
+                        createAndStartReplicator();
+                        peerFound.set(false);
+                        boostAttempts = 0;
+                        mainHandler.post(() -> scheduleDiscoveryBoost());
+                        Log.i(TAG, "Network reconnect: new replicator started. PeerId: " + currentPeerId);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Network reconnect failed", e);
+                    }
+                });
+            }
+
+            @Override
+            public void onLost(Network network) {
+                Log.i(TAG, "Network lost — stopping P2P until network returns");
+                networkAvailable = false;
+                mainHandler.removeCallbacksAndMessages(null);
+                executor.execute(() -> tearDownReplicator());
+                PeerEventBus.getInstance().fireNetworkStateChanged(false);
+            }
+        };
+        connectivityManager.registerNetworkCallback(request, networkCallback);
+        Log.i(TAG, "NetworkCallback registered");
+    }
+
+    private void unregisterNetworkCallback() {
+        if (connectivityManager != null && networkCallback != null) {
+            try {
+                connectivityManager.unregisterNetworkCallback(networkCallback);
+                Log.i(TAG, "NetworkCallback unregistered");
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to unregister NetworkCallback", e);
+            }
+            connectivityManager = null;
+            networkCallback = null;
         }
     }
 
@@ -421,6 +511,16 @@ public class CouchbaseManager {
                 return;
             }
 
+            if (!networkAvailable) {
+                Log.i(TAG, "Discovery boost: network unavailable, skipping");
+                return;
+            }
+
+            if (boostAttempts >= MAX_BOOST_ATTEMPTS) {
+                Log.i(TAG, "Discovery boost: max attempts (" + MAX_BOOST_ATTEMPTS + ") reached, stopping");
+                return;
+            }
+
             // Also check for active neighbor peers -- incoming connections may
             // have arrived before the discovery listener fired (race condition
             // observed on real devices where replicator status events precede
@@ -461,7 +561,7 @@ public class CouchbaseManager {
      */
     private void scheduleAutoRecovery() {
         mainHandler.postDelayed(() -> {
-            if (intentionallyStopped.get() || collection == null) {
+            if (intentionallyStopped.get() || collection == null || !networkAvailable) {
                 return;
             }
 

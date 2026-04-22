@@ -87,6 +87,13 @@ public class PeerListAdapter extends RecyclerView.Adapter<PeerListAdapter.ViewHo
         notifyItemRangeRemoved(0, size);
     }
 
+    public void updateAllPeerStatus(String status) {
+        for (PeerInfo info : peers) {
+            info.status = status;
+        }
+        notifyDataSetChanged();
+    }
+
     public int getPeerCount() {
         return peers.size();
     }
