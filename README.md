@@ -239,7 +239,7 @@ Inspect the Couchbase Lite databases on your running emulators with a Capella-st
 
 This auto-detects the app package (`applicationId` from `app/build.gradle`) and database name (`DATABASE_NAME` from source code), clones the [cblite-browser](https://github.com/abhijeetkb06/cblite-browser) tool on first run, and opens a live document viewer at `http://localhost:8091`.
 
-**Prerequisites:** `cblite` CLI (`brew tap couchbase/tap && brew install cblite`), Python 3, running emulators with the app installed.
+The script automatically installs missing prerequisites (`cblite` CLI and Python 3) via Homebrew if needed.
 
 **Features:**
 - Capella-style UI with scope/collection tree, document table, and JSON/Metadata modal
