@@ -163,7 +163,7 @@ Customer at Kiosk          Kitchen Make Line         Order Status Board        S
 
 ## Quick Start (Step by Step)
 
-### 1. Clone and Build
+### 1. Clone
 
 ```bash
 git clone https://github.com/abhijeetkb06/KitchenSync.git
@@ -175,13 +175,6 @@ Verify JDK 17 is configured. Check `gradle.properties` and update the path if ne
 org.gradle.java.home=/Library/Java/JavaVirtualMachines/jdk-17.0.5.jdk/Contents/Home
 ```
 
-Build the APK:
-```bash
-./gradlew assembleDebug
-```
-
-The APK will be at `app/build/outputs/apk/debug/app-debug.apk`.
-
 ### 2. Update Android Emulator
 
 P2P discovery between emulators requires **Android Emulator v36.5.10+** with shared virtual WiFi support.
@@ -190,46 +183,21 @@ P2P discovery between emulators requires **Android Emulator v36.5.10+** with sha
 2. Check **Android Emulator** and ensure it's **v36.5.10** or later
 3. Click **Apply** to update if needed
 
-### 3. Install System Image
-
-Ensure the Android 14 system image with Google APIs is installed:
-
-```bash
-sdkmanager "system-images;android-34;google_apis;arm64-v8a"
-```
-
-Or install via Android Studio SDK Manager under **SDK Platforms > Android 14 > Google APIs ARM 64 v8a System Image**.
-
-### 4. Create 3 AVDs (Android Virtual Devices)
-
-Create three emulators representing different QSR devices:
-
-```bash
-avdmanager create avd -n "KS_Kiosk_Phone" \
-  -k "system-images;android-34;google_apis;arm64-v8a" \
-  -d "pixel_4" --force <<< "no"
-
-avdmanager create avd -n "KS_Kitchen_Tablet" \
-  -k "system-images;android-34;google_apis;arm64-v8a" \
-  -d "Nexus 9" --force <<< "no"
-
-avdmanager create avd -n "KS_Manager_Phone" \
-  -k "system-images;android-34;google_apis;arm64-v8a" \
-  -d "pixel_4" --force <<< "no"
-```
-
-Or create them via **Android Studio > Device Manager > Create Device**.
-
-### 5. Launch, Install, and Start
-
-Use the included demo script to launch all 3 emulators, wait for boot, and start the app:
+### 3. Launch the Demo
 
 ```bash
 ./launch_demo.sh
 ```
 
-This launches `KS_Kiosk_Phone`, `KS_Kitchen_Tablet`, and `KS_Manager_Phone`, waits for them to boot, then opens the app on all 3. Verify they're online:
+The script is fully automated -- it will:
+1. **Check prerequisites** (adb, emulator, avdmanager, sdkmanager)
+2. **Install the system image** if not already present (`android-34;google_apis;arm64-v8a`)
+3. **Create 3 AVDs** if they don't exist (KS_Kiosk_Phone, KS_Kitchen_Tablet, KS_Manager_Phone)
+4. **Build the APK** via Gradle if not already built
+5. **Launch all 3 emulators** and wait for them to boot
+6. **Install and start the app** on all 3 emulators
 
+Verify they're online:
 ```bash
 adb devices
 # Should show:
@@ -243,14 +211,14 @@ To stop all emulators:
 ./kill_emulators.sh
 ```
 
-### 6. Select Roles and Grant Permissions
+### 4. Select Roles and Grant Permissions
 
 On each emulator:
 1. Select a role (Kiosk / Kitchen / Store Manager)
 2. Tap **"While using the app"** when prompted for location permission
 3. The devices will auto-discover each other -- you'll see "N peers connected" in the toolbar
 
-### 7. Test the Flow
+### 5. Test the Flow
 
 1. **Kiosk**: Browse the menu (Tacos, Burritos, Sides, Drinks), add items to cart, enter a customer name, tap "Place Order"
 2. **Kitchen**: Watch the order appear in real-time with food images -- tap "Start Preparing" > "Mark Ready" > "Picked Up"
